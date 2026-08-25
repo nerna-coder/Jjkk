@@ -45,6 +45,7 @@ local function runSuctionCode()
     end)
 end
 
+-- Код для Auto-Get sand
 local function runAutoGetSand()
     local LocalPlayer = Players.LocalPlayer
     local TeleportService = game:GetService("TeleportService")
@@ -123,6 +124,7 @@ end
 
 local Window
 
+-- Отдельное мини-GUI для конкретного плейса 122902713960550
 if placeId == 122902713960550 then
     local ScreenGui = Instance.new("ScreenGui")
     local MainFrame = Instance.new("Frame")
@@ -158,6 +160,7 @@ if placeId == 122902713960550 then
         runAutoGetSand()
     end)
 
+-- Остальная часть хаба для остальных плейсов
 elseif placeId == 11828384869 then
     Window = Rayfield:CreateWindow({
         Name = "Femboy Hub - Counter & Elude",
@@ -1410,6 +1413,7 @@ elseif placeId == 77283826005207 then
                 local lobby = map:WaitForChild("Lobby", 10)
                 if not lobby then return end
                 for i = 1, 3 do
+                    local portal = lobby:FindFirstChild("Portal" + tostring(i)) -- исправлено на конкатенацию ниже
                     local portal = lobby:FindFirstChild("Portal" .. i)
                     local part = portal and portal:FindFirstChild("Part")
                     if part then
@@ -1585,180 +1589,7 @@ else
 
     local Tab1 = Window:CreateTab("Slap Battles Badges", 4483345998)
 
-    Tab1:CreateButton({
-        Name = "Auto-Get alchemist (request plague)",
-        Callback = function()
-            local Namecall
-            Namecall = hookmetamethod(game, "__namecall", function(self, ...)
-               if getnamecallmethod() == "FireServer" and tostring(self) == "Ban" then
-                   return
-               elseif getnamecallmethod() == "FireServer" and tostring(self) == "WalkSpeedChanged" then
-                   return
-               elseif getnamecallmethod() == "FireServer" and tostring(self) == "AdminGUI" then
-                   return
-               end
-               return Namecall(self, ...)
-            end)
-
-            _G.AntiRagdoll = true
-            if _G.AntiRagdoll then
-                game.Players.LocalPlayer.CharacterAdded:Connect(function(char)
-                    char:WaitForChild("Ragdolled").Changed:Connect(function()
-                        if char:WaitForChild("Ragdolled").Value == true and _G.AntiRagdoll then
-                            repeat task.wait() char.Torso.Anchored = true
-                            until char:WaitForChild("Ragdolled").Value == false
-                            char.Torso.Anchored = false
-                        end
-                    end)
-                end)
-            end
-
-            local arenaBarrier = workspace:FindFirstChild("ArenaBarrier")
-            local deathBarrier = workspace:FindFirstChild("DEATHBARRIER")
-            local deathBarrier2 = workspace:FindFirstChild("DEATHBARRIER2")
-            local dedBarrier = workspace:FindFirstChild("dedBarrier")
-
-            if arenaBarrier then arenaBarrier:Destroy() end
-            if deathBarrier then deathBarrier:Destroy() end
-            if deathBarrier2 then deathBarrier2:Destroy() end
-            if dedBarrier then dedBarrier:Destroy() end
-
-            local platform = Instance.new("Part")
-            platform.Size = Vector3.new(1000, 1, 1000) 
-            platform.Position = Vector3.new(-24058.8594, 306.104187, -844.946045)
-            platform.CFrame = CFrame.new(platform.Position)
-            platform.BrickColor = BrickColor.new("Bright blue")
-            platform.Material = Enum.Material.Plastic
-            platform.Transparency = 1
-            platform.Parent = workspace
-
-            local weld = Instance.new("WeldConstraint")
-            weld.Parent = platform
-            weld.Part0 = platform
-            weld.Part1 = workspace.Terrain
-
-            task.wait(0.2)
-
-            if game.Players.LocalPlayer.leaderstats.Slaps.Value >= 666 then
-                pcall(function() fireclickdetector(workspace.Lobby.Ghost.ClickDetector) end)
-                task.wait(0.3)
-                pcall(function() game:GetService("ReplicatedStorage").Ghostinvisibilityactivated:FireServer() end)
-            end
-
-            task.wait(0.3)
-
-            if game:GetService("BadgeService"):UserHasBadgeAsync(game.Players.LocalPlayer.UserId, 2124819262) then
-                pcall(function() fireclickdetector(workspace.Lobby.Plague.ClickDetector) end)
-                task.wait(0.3)
-                
-                task.spawn(function()
-                    local killCount = 0
-                    local trackedPlayers = {}
-                    
-                    while true do
-                        pcall(function()
-                            local player = game.Players.LocalPlayer
-                            for _, targetPlayer in ipairs(game:GetService("Players"):GetPlayers()) do
-                                if targetPlayer ~= player and targetPlayer.Character then
-                                    local char = targetPlayer.Character
-                                    local leftArm = char:FindFirstChild("Left Arm")
-                                    local humanoid = char:FindFirstChildOfClass("Humanoid")
-                                    
-                                    if leftArm and humanoid and humanoid.Health > 0 then
-                                        game:GetService("ReplicatedStorage").PlagueHit:FireServer(leftArm)
-                                        
-                                        if (humanoid.Health <= 1 or char:FindFirstChild("ded")) and not trackedPlayers[targetPlayer] then
-                                            trackedPlayers[targetPlayer] = true
-                                            killCount = killCount + 1
-                                            
-                                            game.StarterGui:SetCore("SendNotification", {
-                                                Title = "KILL! (" .. killCount .. "/5)";
-                                                Text = "Убит: " .. targetPlayer.Name;
-                                                Icon = "rbxassetid://10905815930";
-                                                Duration = "3";
-                                            })
-                                            
-                                            if killCount >= 5 then
-                                                game.StarterGui:SetCore("SendNotification", {
-                                                    Title = "GOAL REACHED!";
-                                                    Text = "Сделано 5 киллов. Ожидание 6 секунд...";
-                                                    Icon = "rbxassetid://10905815930";
-                                                    Duration = "5";
-                                                })
-                                                
-                                                task.wait(6)
-                                                
-                                                if player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
-                                                    player.Character:FindFirstChildOfClass("Humanoid").Health = 0
-                                                end
-                                                
-                                                return
-                                            end
-                                        end
-                                    end
-                                end
-                            end
-                        end)
-                        task.wait(1)
-                    end
-                end)
-            end
-
-            task.spawn(function()
-                local player = game.Players.LocalPlayer
-                
-                pcall(function()
-                    if player.Character and player.Character:FindFirstChild("Head") then
-                        firetouchinterest(player.Character.Head, workspace.Lobby.Teleport1, 0)
-                    end
-                end)
-                
-                while true do
-                    task.wait(2)
-                    pcall(function()
-                        if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then return end
-                        player.Character.HumanoidRootPart.CFrame = CFrame.new(-24036.2266, 316.696503, -855.74939)
-                    end)
-                    
-                    task.wait(2)
-                    
-                    pcall(function()
-                        if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then return end
-                        
-                        local validPlayers = {}
-                        for _, p in ipairs(game:GetService("Players"):GetPlayers()) do
-                            if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                                local char = p.Character
-                                if not char:FindFirstChild("InLobby") and not char:FindFirstChild("ded") and not char:FindFirstChild("InLabyrinth") then
-                                    table.insert(validPlayers, char)
-                                end
-                            end
-                        end
-                        
-                        if #validPlayers > 0 then
-                            local randomTarget = validPlayers[math.random(1, #validPlayers)]
-                            player.Character.HumanoidRootPart.CFrame = randomTarget.HumanoidRootPart.CFrame
-                        end
-                    end)
-                end
-            end)
-
-            task.spawn(function()
-                while true do
-                    pcall(function()
-                        for _, v in pairs(game.Players:GetChildren()) do
-                            if v.Character and v.Character:FindFirstChild("rock") then
-                                v.Character:FindFirstChild("rock").CanTouch = false
-                                v.Character:FindFirstChild("rock").CanQuery = false
-                            end
-                        end
-                    end)
-                    task.wait()
-                end
-            end)
-        end
-    })
-
+    -- Добавлена кнопка Auto-Get sand в основной хаб
     Tab1:CreateButton({
         Name = "Auto-Get sand",
         Callback = function()
@@ -2299,7 +2130,7 @@ end
     Tab3:CreateButton({
         Name = "Run Abuser",
         Callback = function()
-            pcall(function() loadstring(game:HttpGet("https://raw.Imageusercontent.com/dihmuncher23-lang/Run-abuser/refs/heads/main/Run%20abuser"))() end)
+            pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/dihmuncher23-lang/Run-abuser/refs/heads/main/Run%20abuser"))() end)
         end
     })
 
