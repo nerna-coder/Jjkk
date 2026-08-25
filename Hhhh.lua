@@ -1642,7 +1642,9 @@ end
             if game.PlaceId == 101113181694564 then
                 loadstring(s)()
             else
-                if qtp then qtp(s) end
+                if qtp then 
+                    pcall(function() qtp(s) end)
+                end
                 TeleportService:Teleport(101113181694564, lp)
             end
         end
@@ -1955,7 +1957,6 @@ end
         end
     })
 
-    -- BUG FIX: CFrame was truncated in original. Fixed below.
     Tab1:CreateButton({
         Name = "Instant firework. Player 1 (helper)",
         Callback = function()
@@ -2107,3 +2108,4 @@ end
     Tab6:CreateParagraph({Title = "3rd creator", Content = "deltarune_tomorrow"})
     Tab6:CreateParagraph({Title = "Thanks to..", Content = "Nexer open sourced scripts and kindness!"})
     Tab6:CreateParagraph({Title = "Thanks to..", Content = "Scripter for shellbert fix, huge appreciation! Thanks for fixing script!"})
+end
