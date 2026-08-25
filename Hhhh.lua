@@ -18,9 +18,149 @@ local HttpService = game:GetService("HttpService")
 local BadgeService = game:GetService("BadgeService")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
+local VIM = game:GetService("VirtualInputManager")
 
 local lp = Players.LocalPlayer
 local placeId = game.PlaceId
+
+local function runAutoGetCamera()
+    task.spawn(function()
+        local player       = Players.LocalPlayer
+        local char         = player.Character or player.CharacterAdded:Wait()
+        local hrp          = char:WaitForChild("HumanoidRootPart")
+        local humanoid     = char:WaitForChild("Humanoid")
+        local camRemotes   = ReplicatedStorage.Assets.Obtainments.Camera.Remotes
+        local isPhotoValid = camRemotes.IsPhotoValid
+
+        local function tp(pos)
+            hrp.CFrame = CFrame.new(pos + Vector3.new(0, 4, 0))
+            task.wait(0.35)
+        end
+
+        local function pressQ()
+            VIM:SendKeyEvent(true,  Enum.KeyCode.Q, false, game)
+            task.wait(0.15)
+            VIM:SendKeyEvent(false, Enum.KeyCode.Q, false, game)
+            task.wait(0.5)
+        end
+
+        local function waitFor(condition, timeout)
+            local t = tick()
+            repeat task.wait(0.25) until condition() or tick() - t > (timeout or 15)
+            return condition()
+        end
+
+        pressQ()
+
+        local CAMERA_SPAWN = Vector3.new(-385.063934, 52.0801315, 2.81142139)
+        tp(CAMERA_SPAWN)
+
+        local cameraModel = nil
+
+        local gotIt = waitFor(function()
+            for _, v in ipairs(workspace:GetDescendants()) do
+                if v.Name == "CameraModel" and v:IsA("Model") then
+                    cameraModel = v
+                    return true
+                end
+            end
+        end, 0.4)
+
+        if not gotIt or not cameraModel then
+            pressQ()
+            tp(CAMERA_SPAWN)
+            waitFor(function()
+                for _, v in ipairs(workspace:GetDescendants()) do
+                    if v.Name == "CameraModel" and v:IsA("Model") then
+                        cameraModel = v
+                        return true
+                    end
+                end
+            end, 0.4)
+        end
+
+        if cameraModel then
+            local camPartPos = cameraModel.PrimaryPart and cameraModel.PrimaryPart.Position
+                or cameraModel:GetPivot().Position
+            tp(camPartPos)
+
+            local prompt = cameraModel:FindFirstChildWhichIsA("ProximityPrompt", true)
+            if prompt then
+                fireproximityprompt(prompt)
+            end
+        end
+
+        task.wait(1.5)
+
+        local camTool = player.Backpack:FindFirstChild("Camera")
+            or (char and char:FindFirstChild("Camera"))
+
+        if camTool then
+            humanoid:EquipTool(camTool)
+            task.wait(1.2)
+        end
+
+        local PNG_SPOTS = {
+            { "1 – Cannon Island",           Vector3.new( 316.721,  31.268,  188.642), Vector3.new( 0.996, 0, -0.087) },
+            { "2 – Chain Obby to Slapple",   Vector3.new(-128.993,  -1.786,  125.199), Vector3.new( 0.705, 0, -0.709) },
+            { "3 – Moai Island Statue",      Vector3.new(-274.513, -19.490,  -10.172), Vector3.new(-0.714, 0,  0.700) },
+            { "4 – Slapple Island Big Tree", Vector3.new(-425.410,  56.777,  -23.400), Vector3.new( 0,     0,  1    ) },
+            { "5 – East Island Tree",        Vector3.new(  -8.155,  -2.694, -208.862), Vector3.new(-0.985, 0, -0.174) },
+            { "6 – The Fort",                Vector3.new( 242.086, -10.646,  -25.781), Vector3.new( 0.445, 0,  0.895) },
+            { "7 – Chain (Default↔Normal)",  Vector3.new( 116.677,  -2.879,    1.637), Vector3.new(-0.991, 0, -0.131) },
+        }
+
+        local function photographPart(part, lookVec)
+            local standPos = part.Position + lookVec * 7
+            tp(standPos)
+
+            workspace.CurrentCamera.CFrame = CFrame.lookAt(
+                standPos + Vector3.new(0, 2, 0),
+                part.Position
+            )
+            task.wait(0.25)
+
+            local ok, result = pcall(function()
+                return isPhotoValid:InvokeServer(part)
+            end)
+
+            if ok and result then
+                part:Destroy()
+                return true
+            elseif ok then
+                VIM:SendMouseButtonEvent(0, 0, 0, true,  game, 1)
+                task.wait(0.05)
+                VIM:SendMouseButtonEvent(0, 0, 0, false, game, 1)
+                task.wait(0.4)
+                return false
+            else
+                return false
+            end
+        end
+
+        local folder = workspace:FindFirstChild("Camera_Obtainment_PNGS")
+        if not folder then return end
+
+        for i, spot in ipairs(PNG_SPOTS) do
+            local name, targetPos, lookVec = spot[1], spot[2], spot[3]
+
+            local matchedPart = nil
+            for _, p in ipairs(folder:GetChildren()) do
+                if p:IsA("BasePart") and (p.Position - targetPos).Magnitude < 2 then
+                    matchedPart = p
+                    break
+                end
+            end
+
+            if not matchedPart then
+                continue
+            end
+
+            photographPart(matchedPart, lookVec)
+            task.wait(0.5)
+        end
+    end)
+end
 
 local function runSuctionCode()
     task.spawn(function()
@@ -45,7 +185,187 @@ local function runSuctionCode()
     end)
 end
 
--- Код для Auto-Get sand
+local function runAutoGetAlchemist()
+    pcall(function()
+        local Namecall
+        Namecall = hookmetamethod(game, "__namecall", function(self, ...)
+           if getnamecallmethod() == "FireServer" and tostring(self) == "Ban" then
+               return
+           elseif getnamecallmethod() == "FireServer" and tostring(self) == "WalkSpeedChanged" then
+               return
+           elseif getnamecallmethod() == "FireServer" and tostring(self) == "AdminGUI" then
+               return
+           end
+           return Namecall(self, ...)
+        end)
+    end)
+
+    _G.AntiRagdoll = true
+    if _G.AntiRagdoll then
+        game.Players.LocalPlayer.CharacterAdded:Connect(function(char)
+            local ragdolled = char:WaitForChild("Ragdolled", 5)
+            if ragdolled then
+                ragdolled.Changed:Connect(function()
+                    if ragdolled.Value == true and _G.AntiRagdoll then
+                        repeat task.wait() 
+                            if char:FindFirstChild("Torso") then
+                                char.Torso.Anchored = true
+                            end
+                        until ragdolled.Value == false
+                        if char:FindFirstChild("Torso") then
+                            char.Torso.Anchored = false
+                        end
+                    end
+                end)
+            end
+        end)
+    end
+
+    local arenaBarrier = workspace:FindFirstChild("ArenaBarrier")
+    local deathBarrier = workspace:FindFirstChild("DEATHBARRIER")
+    local deathBarrier2 = workspace:FindFirstChild("DEATHBARRIER2")
+    local dedBarrier = workspace:FindFirstChild("dedBarrier")
+
+    if arenaBarrier then arenaBarrier:Destroy() end
+    if deathBarrier then deathBarrier:Destroy() end
+    if deathBarrier2 then deathBarrier2:Destroy() end
+    if dedBarrier then dedBarrier:Destroy() end
+
+    local platform = Instance.new("Part")
+    platform.Size = Vector3.new(1000, 1, 1000) 
+    platform.Position = Vector3.new(-24058.8594, 306.104187, -844.946045)
+    platform.CFrame = CFrame.new(platform.Position)
+    platform.BrickColor = BrickColor.new("Bright blue")
+    platform.Material = Enum.Material.Plastic
+    platform.Transparency = 1
+    platform.Parent = workspace
+
+    local weld = Instance.new("WeldConstraint")
+    weld.Parent = platform
+    weld.Part0 = platform
+    weld.Part1 = workspace.Terrain
+
+    task.wait(0.2)
+
+    pcall(function()
+        if game.Players.LocalPlayer.leaderstats.Slaps.Value >= 666 then
+            pcall(function() fireclickdetector(workspace.Lobby.Ghost.ClickDetector) end)
+            task.wait(0.3)
+            pcall(function() game:GetService("ReplicatedStorage").Ghostinvisibilityactivated:FireServer() end)
+        end
+    end)
+
+    task.wait(0.3)
+
+    local scriptActive = true
+
+    game.Players.LocalPlayer.CharacterAdded:Connect(function()
+        scriptActive = false
+    end)
+
+    pcall(function()
+        if game:GetService("BadgeService"):UserHasBadgeAsync(game.Players.LocalPlayer.UserId, 2124819262) then
+            pcall(function() fireclickdetector(workspace.Lobby.Plague.ClickDetector) end)
+            task.wait(0.3)
+            
+            task.spawn(function()
+                local killCount = 0
+                local trackedPlayers = {}
+                
+                while scriptActive do
+                    pcall(function()
+                        local player = game.Players.LocalPlayer
+                        for _, targetPlayer in ipairs(game:GetService("Players"):GetPlayers()) do
+                            if not scriptActive then break end
+                            if targetPlayer ~= player and targetPlayer.Character then
+                                local char = targetPlayer.Character
+                                local leftArm = char:FindFirstChild("Left Arm")
+                                local humanoid = char:FindFirstChildOfClass("Humanoid")
+                                
+                                if leftArm and humanoid and humanoid.Health > 0 then
+                                    game:GetService("ReplicatedStorage").PlagueHit:FireServer(leftArm)
+                                    
+                                    if (humanoid.Health <= 1 or char:FindFirstChild("ded")) and not trackedPlayers[targetPlayer] then
+                                        trackedPlayers[targetPlayer] = true
+                                        killCount = killCount + 1
+                                        
+                                        if killCount >= 5 then
+                                            scriptActive = false
+                                            task.wait(6)
+                                            
+                                            if player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
+                                                player.Character:FindFirstChildOfClass("Humanoid").Health = 0
+                                            end
+                                            
+                                            return
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end)
+                    task.wait(1)
+                end
+            end)
+        end
+    end)
+
+    task.spawn(function()
+        local player = game.Players.LocalPlayer
+        
+        pcall(function()
+            if player.Character and player.Character:FindFirstChild("Head") then
+                firetouchinterest(player.Character.Head, workspace.Lobby.Teleport1, 0)
+            end
+        end)
+        
+        while scriptActive do
+            task.wait(2)
+            if not scriptActive then break end
+            pcall(function()
+                if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then return end
+                player.Character.HumanoidRootPart.CFrame = CFrame.new(-24036.2266, 316.696503, -855.74939)
+            end)
+            
+            task.wait(2)
+            if not scriptActive then break end
+            
+            pcall(function()
+                if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then return end
+                
+                local validPlayers = {}
+                for _, p in ipairs(game:GetService("Players"):GetPlayers()) do
+                    if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                        local char = p.Character
+                        if not char:FindFirstChild("InLobby") and not char:FindFirstChild("ded") and not char:FindFirstChild("InLabyrinth") then
+                            table.insert(validPlayers, char)
+                        end
+                    end
+                end
+                
+                if #validPlayers > 0 then
+                    local randomTarget = validPlayers[math.random(1, #validPlayers)]
+                    player.Character.HumanoidRootPart.CFrame = randomTarget.HumanoidRootPart.CFrame
+                end
+            end)
+        end
+    end)
+
+    task.spawn(function()
+        while scriptActive do
+            pcall(function()
+                for _, v in pairs(game.Players:GetChildren()) do
+                    if v.Character and v.Character:FindFirstChild("rock") then
+                        v.Character:FindFirstChild("rock").CanTouch = false
+                        v.Character:FindFirstChild("rock").CanQuery = false
+                    end
+                end
+            end)
+            task.wait()
+        end
+    end)
+end
+
 local function runAutoGetSand()
     local LocalPlayer = Players.LocalPlayer
     local TeleportService = game:GetService("TeleportService")
@@ -124,7 +444,6 @@ end
 
 local Window
 
--- Отдельное мини-GUI для конкретного плейса 122902713960550
 if placeId == 122902713960550 then
     local ScreenGui = Instance.new("ScreenGui")
     local MainFrame = Instance.new("Frame")
@@ -160,7 +479,6 @@ if placeId == 122902713960550 then
         runAutoGetSand()
     end)
 
--- Остальная часть хаба для остальных плейсов
 elseif placeId == 11828384869 then
     Window = Rayfield:CreateWindow({
         Name = "Femboy Hub - Counter & Elude",
@@ -1413,7 +1731,6 @@ elseif placeId == 77283826005207 then
                 local lobby = map:WaitForChild("Lobby", 10)
                 if not lobby then return end
                 for i = 1, 3 do
-                    local portal = lobby:FindFirstChild("Portal" + tostring(i)) -- исправлено на конкатенацию ниже
                     local portal = lobby:FindFirstChild("Portal" .. i)
                     local part = portal and portal:FindFirstChild("Part")
                     if part then
@@ -1589,7 +1906,20 @@ else
 
     local Tab1 = Window:CreateTab("Slap Battles Badges", 4483345998)
 
-    -- Добавлена кнопка Auto-Get sand в основной хаб
+    Tab1:CreateButton({
+        Name = "Auto-Get camera (Nothing is required)",
+        Callback = function()
+            runAutoGetCamera()
+        end
+    })
+
+    Tab1:CreateButton({
+        Name = "Auto-Get Alchemist",
+        Callback = function()
+            runAutoGetAlchemist()
+        end
+    })
+
     Tab1:CreateButton({
         Name = "Auto-Get sand",
         Callback = function()
@@ -1855,380 +2185,4 @@ end
             end
         end
     })
-
-    Tab1:CreateButton({
-        Name = "Auto Slender",
-        Callback = function()
-            task.spawn(function()
-                if placeId == 6403373529 or placeId == 9015014224 then
-                    local function gethrp()
-                        local c = lp.Character or lp.CharacterAdded:Wait()
-                        return c:WaitForChild("HumanoidRootPart", 5)
-                    end
-                    local function equipGlove(glove)
-                        local stats = lp:FindFirstChild("leaderstats")
-                        if stats and stats:FindFirstChild("Glove") and stats.Glove.Value ~= glove then
-                            if lp.Character and not lp.Character:FindFirstChild("entered") then
-                                local g = Workspace.Lobby:FindFirstChild(glove)
-                                if g and g:FindFirstChild("ClickDetector") then
-                                    fireclickdetector(g.ClickDetector)
-                                    task.wait(0.5)
-                                end
-                            end
-                        end
-                    end
-                    local function reset()
-                        if lp.Character and lp.Character:FindFirstChild("Humanoid") then
-                            lp.Character.Humanoid.Health = 0
-                        end
-                        lp.CharacterAdded:Wait()
-                        task.wait(1)
-                    end
-                    equipGlove("Balloony")
-                    local root = gethrp()
-                    if root then root.CFrame = CFrame.new(-1210.02, 331.92, 3.47, 0.018, 0, 1, 0, 1, 0, -1, 0, 0.018) end
-                    local tape = Workspace:WaitForChild("TapeRecorder", 10)
-                    if tape and tape:FindFirstChild("Front") then
-                        root = gethrp()
-                        if root then root.CFrame = tape.Front.CFrame * CFrame.new(0, 0, -1) end
-                        task.wait(0.2)
-                        if tape.Front:FindFirstChild("ProximityPrompt") then fireproximityprompt(tape.Front.ProximityPrompt) end
-                        task.wait(0.15)
-                        local code = ""
-                        local rec = true
-                        local sfx = tape.Front:FindFirstChild("DigitsSFX")
-                        while rec do
-                            task.wait()
-                            if sfx then
-                                for i = 0, 9 do
-                                    local d = tostring(i)
-                                    local snd = sfx:FindFirstChild(d)
-                                    if snd and snd.Playing then
-                                        code = code .. d
-                                        task.wait(1)
-                                        break
-                                    end
-                                end
-                            end
-                            if tape.Front.ProximityPrompt.Enabled then rec = false end
-                        end
-                        reset()
-                        equipGlove("Pocket")
-                        root = gethrp()
-                        if root then
-                            root.CFrame = CFrame.new(-1210.02, 331.92, 3.47, 0.018, 0, 1, 0, 1, 0, -1, 0, 0.018)
-                            task.wait(0.5)
-                            root.CFrame = CFrame.new(123.28, 255.30, 1.05, 0.998, 0, -0.055, 0, 1, 0, 0.055, 0, 0.998)
-                            task.wait(0.5)
-                            root.CFrame = CFrame.new(17944.88, -130.16, -3492.70, -0.998, 0, -0.070, 0, 1, 0, 0.070, 0, -0.998)
-                            task.wait(0.5)
-                        end
-                        local rem = ReplicatedStorage:FindFirstChild("GeneralAbility")
-                        if rem and root then rem:FireServer(root.CFrame) end
-                        local pocket = nil
-                        local t = tick() + 10
-                        repeat
-                            task.wait(0.2)
-                            for _, v in ipairs(Workspace:GetChildren()) do
-                                if v:IsA("Model") and string.find(v.Name, "'s Pocket") then
-                                    if v:FindFirstChildWhichIsA("ProximityPrompt", true) then pocket = v break end
-                                end
-                            end
-                        until pocket or tick() > t
-                        if pocket then
-                            local prompt = pocket:FindFirstChildWhichIsA("ProximityPrompt", true)
-                            if prompt then
-                                local parent = prompt.Parent
-                                root = gethrp()
-                                if root then
-                                    if parent:IsA("BasePart") then root.CFrame = parent.CFrame
-                                    else root.CFrame = pocket:GetPivot() end
-                                end
-                                task.wait(0.3)
-                                prompt.HoldDuration = 0
-                                prompt.MaxActivationDistance = 9999
-                                prompt.RequiresLineOfSight = false
-                                task.wait(0.1)
-                                fireproximityprompt(prompt)
-                                task.wait(0.2)
-                                fireproximityprompt(prompt)
-                                task.wait(2)
-                            end
-                        end
-                        local pad = nil
-                        t = tick() + 10
-                        repeat
-                            task.wait(0.2)
-                            if pocket and pocket:FindFirstChild("PocketKeypad") then
-                                pad = pocket.PocketKeypad
-                            else
-                                local rf = Workspace:FindFirstChild("RoomsFolder")
-                                if rf then
-                                    for _, r in ipairs(rf:GetChildren()) do
-                                        if string.find(r.Name, "'s Room") and r:FindFirstChild("PocketKeypad") then
-                                            pad = r.PocketKeypad
-                                            break
-                                        end
-                                    end
-                                end
-                            end
-                        until pad or tick() > t
-                        if pad and pad:FindFirstChild("Buttons") then
-                            local btns = pad.Buttons
-                            if btns:FindFirstChild("Reset") and btns.Reset:FindFirstChild("ClickDetector") then
-                                fireclickdetector(btns.Reset.ClickDetector)
-                                task.wait(0.3)
-                            end
-                            for i = 1, #code do
-                                local digit = code:sub(i, i)
-                                local b = btns:FindFirstChild(digit)
-                                if b and b:FindFirstChild("ClickDetector") then
-                                    fireclickdetector(b.ClickDetector)
-                                    task.wait(0.4)
-                                end
-                            end
-                            task.wait(0.3)
-                            if btns:FindFirstChild("Enter") and btns.Enter:FindFirstChild("ClickDetector") then
-                                fireclickdetector(btns.Enter.ClickDetector)
-                                task.wait(1)
-                            end
-                        end
-                        for _, o in ipairs(Workspace:GetDescendants()) do
-                            if o.Name == "Pages" or string.find(o.Name:lower(), "page") then
-                                for _, p in ipairs(o:GetChildren()) do
-                                    local cd = p:FindFirstChild("ClickDetector")
-                                    if cd then fireclickdetector(cd) end
-                                end
-                            end
-                        end
-                        local bRoom = Workspace:FindFirstChild("BountyHunterRoom")
-                        if bRoom then
-                            local m = bRoom:FindFirstChild("BountyHunterMysteryRoom")
-                            local cd = m and m:FindFirstChildWhichIsA("ClickDetector", true)
-                            if cd then fireclickdetector(cd) end
-                        end
-                        task.wait(0.5)
-                        reset()
-                    end
-                end
-            end)
-        end
-    })
-
-    Tab1:CreateButton({
-        Name = "Auto Recall",
-        Callback = function()
-            local rsanswrr
-            repeat
-                task.wait()
-                if ReplicatedStorage:FindFirstChild("RecallReset") then
-                    ReplicatedStorage.RecallReset:FireServer(nil, true)
-                end
-                if ReplicatedStorage:FindFirstChild("RecallLastInteractionSteps") then
-                    rsanswrr = ReplicatedStorage.RecallLastInteractionSteps:InvokeServer(false)
-                end
-            until rsanswrr == "Simon says walk through the portal to collect your reward"
-            task.wait(2)
-            if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") and Workspace:FindFirstChild("RepressedMemories") then
-                lp.Character.HumanoidRootPart:PivotTo(Workspace.RepressedMemories.Portal.CFrame)
-            end
-        end
-    })
-
-    Tab1:CreateButton({
-        Name = "Poltergeist (ONLY HALLOWEEN)",
-        Callback = function()
-            pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/nerna-coder/Poltergeist/refs/heads/main/Slap%20battles.lua"))() end)
-        end
-    })
-
-    Tab1:CreateButton({
-        Name = "Instant ice skate",
-        Callback = function()
-            if ReplicatedStorage:FindFirstChild("IceSkate") then
-                ReplicatedStorage.IceSkate:FireServer("Freeze")
-            end
-        end
-    })
-
-    Tab1:CreateButton({
-        Name = "Instant lamp",
-        Callback = function()
-            pcall(function()
-                local Event = ReplicatedStorage:FindFirstChild("nightmare")
-                if Event then
-                    for i = 35, 120 do
-                        Event:FireServer("LightBroken")
-                        task.wait(0.05)
-                    end
-                end
-            end)
-        end
-    })
-
-    Tab1:CreateButton({
-        Name = "Auto 250 and Disarm (bubble) uses kill helper!",
-        Callback = function()
-            pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Thiago3246/KillstreakHelper/main/Source.luau"))() end)
-        end
-    })
-
-    Tab1:CreateButton({
-        Name = "Auto Bob (needs counter and replica by nexer)",
-        Callback = function()
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/NewNexer/NexerHub/refs/heads/main/SB/P/Autobob.luau"))()
-        end
-    })
-
-    Tab1:CreateButton({
-        Name = "Instant firework. Player 1 (helper)",
-        Callback = function()
-            if ReplicatedStorage:FindFirstChild("GeneralAbility") then
-                ReplicatedStorage.GeneralAbility:FireServer()
-            end
-            task.wait(0.2)
-            if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
-                lp.Character.HumanoidRootPart.CFrame = CFrame.new(-1210.05, 328.22, 2.48, 0.748, -0.000, 0.664, -0.000, 1.000, 0.000, -0.664, -0.000, 0.748)
-            end
-        end
-    })
-
-    Tab1:CreateButton({
-        Name = "Instant Firework. Player 2 (main acc)",
-        Callback = function()
-            local hrp = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
-            if not hrp then return end
-            hrp.CFrame = CFrame.new(-1210.05, 328.22, 2.48, 0.748, -0.000, 0.664, -0.000, 1.000, 0.000, -0.664, -0.000, 0.748)
-            task.wait(0.3)
-            pcall(function()
-                if ReplicatedStorage:FindFirstChild("Firework") then ReplicatedStorage.Firework:InvokeServer() end
-                if ReplicatedStorage:FindFirstChild("AlchemistEvent") then
-                    ReplicatedStorage.AlchemistEvent:FireServer("AddItem", "Alchemist")
-                    task.wait(0.1)
-                    ReplicatedStorage.AlchemistEvent:FireServer("EquipItem", "Alchemist")
-                end
-            end)
-        end
-    })
-
-    Tab1:CreateButton({ Name = "Auto-Get lotus", Callback = function() TeleportService:Teleport(93981091811742, lp) end })
-    Tab1:CreateButton({ Name = "Auto-Get doorkeeper", Callback = function() TeleportService:Teleport(125845699717230, lp) end })
-
-    local Tab2 = Window:CreateTab("Farmers (fast)", 4483345998)
-    Tab2:CreateButton({
-        Name = "St1mlx mastery helper (key)",
-        Callback = function()
-            pcall(function() loadstring(game:HttpGet('https://raw.githubusercontent.com/st1mlx/bebebe/refs/heads/main/SBHub'))() end)
-        end
-    })
-
-    local Tab3 = Window:CreateTab("Funny", 4483345998)
-    Tab3:CreateButton({
-        Name = "Click this if you support spliot! Don't if you don't know who it is",
-        Callback = function() lp:Kick("if u support spliot then go fucking kill yourself") end
-    })
-    Tab3:CreateButton({
-        Name = "Run Abuser",
-        Callback = function()
-            pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/dihmuncher23-lang/Run-abuser/refs/heads/main/Run%20abuser"))() end)
-        end
-    })
-
-    local Tab4 = Window:CreateTab("Useful", 4483345998)
-    Tab4:CreateButton({
-        Name = "Hide your username",
-        Callback = function()
-            local function sanitizeCharacter(character)
-                if not character then return end
-                local humanoid = character:WaitForChild("Humanoid", 5)
-                if humanoid then
-                    humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
-                    humanoid.DisplayName = ""
-                end
-                local head = character:WaitForChild("Head", 5)
-                if not head then return end
-                for _, child in pairs(head:GetChildren()) do
-                    if child:IsA("BillboardGui") then child.Enabled = false end
-                end
-            end
-            if lp.Character then sanitizeCharacter(lp.Character) end
-            lp.CharacterAdded:Connect(sanitizeCharacter)
-        end
-    })
-    Tab4:CreateButton({
-        Name = "Noclip",
-        Callback = function()
-            local character = lp.Character or lp.CharacterAdded:Wait()
-            RunService.Stepped:Connect(function()
-                if character and character.Parent then
-                    for _, part in pairs(character:GetDescendants()) do
-                        if part:IsA("BasePart") and part.CanCollide then part.CanCollide = false end
-                    end
-                end
-            end)
-            lp.CharacterAdded:Connect(function(newChar) character = newChar end)
-        end
-    })
-    Tab4:CreateButton({
-        Name = "Remove Brazil (to prevent firework kicks)",
-        Callback = function()
-            local lobby = workspace:FindFirstChild("Lobby")
-            local brazil = lobby and lobby:FindFirstChild("brazil")
-            local portal = brazil and brazil:FindFirstChild("portal")
-            if portal then portal:Destroy() end
-        end
-    })
-
-    local Tab5 = Window:CreateTab("Slap farms (credits to scripter, slow)", 4483362458)
-    Tab5:CreateButton({
-        Name = "Slapples farm (not serverhop)",
-        Callback = function()
-            if _G.BringSlapples == nil then _G.BringSlapples = false end
-            _G.BringSlapples = not _G.BringSlapples
-            task.spawn(function()
-                while _G.BringSlapples do
-                    local player = game.Players.LocalPlayer
-                    if not player then task.wait(0.1) continue end
-                    local character = player.Character
-                    if not character or not character.Parent then task.wait(0.01) continue end
-                    if not character:FindFirstChild("entered") then task.wait(0.01) continue end
-                    local hrp = character:FindFirstChild("HumanoidRootPart")
-                    if not hrp then task.wait(0.01) continue end
-                    local slapplesFolder = workspace:FindFirstChild("Arena")
-                        and workspace.Arena:FindFirstChild("island5")
-                        and workspace.Arena.island5:FindFirstChild("Slapples")
-                    if not slapplesFolder then task.wait(0.01) continue end
-                    for _, slapple in pairs(slapplesFolder:GetChildren()) do
-                        if slapple:IsA("Model") and (slapple.Name == "Slapple" or slapple.Name == "GoldenSlapple") then
-                            pcall(function()
-                                local glove = slapple:FindFirstChild("Glove")
-                                if glove then glove.CFrame = hrp.CFrame
-                                else slapple:SetPrimaryPartCFrame(hrp.CFrame) end
-                            end)
-                        end
-                    end
-                    task.wait(0.01)
-                end
-            end)
-        end
-    })
-    Tab5:CreateButton({
-        Name = "Copy Loader Code",
-        Callback = function()
-            local loadstringCode = 'loadstring(game:HttpGet("https://raw.githubusercontent.com"))()'
-            setclipboard(loadstringCode)
-            Rayfield:Notify({
-                Title = "Copied Successfully",
-                Content = "Script copied put it in Auto Execute folder to auto work",
-                Duration = 20
-            })
-        end
-    })
-
-    local Tab6 = Window:CreateTab("Credits", 4483345998)
-    Tab6:CreateParagraph({Title = "Creators", Content = "silentabsolutedayn"})
-    Tab6:CreateParagraph({Title = "2nd creator", Content = "nerna coder-zemboxosx"})
-    Tab6:CreateParagraph({Title = "3rd creator", Content = "deltarune_tomorrow"})
-    Tab6:CreateParagraph({Title = "Thanks to..", Content = "Nexer open sourced scripts and kindness!"})
-    Tab6:CreateParagraph({Title = "Thanks to..", Content = "Scripter for shellbert fix, huge appreciation! Thanks for fixing script!"})
 end
