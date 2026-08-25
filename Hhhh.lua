@@ -45,7 +45,6 @@ local function runSuctionCode()
     end)
 end
 
--- Код для Auto-Get sand
 local function runAutoGetSand()
     local LocalPlayer = Players.LocalPlayer
     local TeleportService = game:GetService("TeleportService")
@@ -124,7 +123,6 @@ end
 
 local Window
 
--- Отдельное мини-GUI для конкретного плейса 122902713960550
 if placeId == 122902713960550 then
     local ScreenGui = Instance.new("ScreenGui")
     local MainFrame = Instance.new("Frame")
@@ -160,7 +158,6 @@ if placeId == 122902713960550 then
         runAutoGetSand()
     end)
 
--- Остальная часть хаба для остальных плейсов
 elseif placeId == 11828384869 then
     Window = Rayfield:CreateWindow({
         Name = "Femboy Hub - Counter & Elude",
@@ -1413,7 +1410,6 @@ elseif placeId == 77283826005207 then
                 local lobby = map:WaitForChild("Lobby", 10)
                 if not lobby then return end
                 for i = 1, 3 do
-                    local portal = lobby:FindFirstChild("Portal" + tostring(i)) -- исправлено на конкатенацию ниже
                     local portal = lobby:FindFirstChild("Portal" .. i)
                     local part = portal and portal:FindFirstChild("Part")
                     if part then
@@ -1589,7 +1585,6 @@ else
 
     local Tab1 = Window:CreateTab("Slap Battles Badges", 4483345998)
 
-    -- Добавлена кнопка Auto-Get sand в основной хаб
     Tab1:CreateButton({
         Name = "Auto-Get sand",
         Callback = function()
@@ -2130,7 +2125,7 @@ end
     Tab3:CreateButton({
         Name = "Run Abuser",
         Callback = function()
-            pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/dihmuncher23-lang/Run-abuser/refs/heads/main/Run%20abuser"))() end)
+            pcall(function() loadstring(game:HttpGet("https://raw.Imageusercontent.com/dihmuncher23-lang/Run-abuser/refs/heads/main/Run%20abuser"))() end)
         end
     })
 
