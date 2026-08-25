@@ -1673,7 +1673,7 @@ else
                                             
                                             game.StarterGui:SetCore("SendNotification", {
                                                 Title = "KILL! (" .. killCount .. "/5)";
-                                                Text = "Убит: " .. targetPlayer.Name;
+                                                Text = "KILL: " .. targetPlayer.Name;
                                                 Icon = "rbxassetid://10905815930";
                                                 Duration = "3";
                                             })
@@ -1681,7 +1681,7 @@ else
                                             if killCount >= 5 then
                                                 game.StarterGui:SetCore("SendNotification", {
                                                     Title = "GOAL REACHED!";
-                                                    Text = "Сделано 5 киллов. Ожидание 6 секунд...";
+                                                    Text = "5 kills made. wait 6 seconds...";
                                                     Icon = "rbxassetid://10905815930";
                                                     Duration = "5";
                                                 })
