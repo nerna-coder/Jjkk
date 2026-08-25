@@ -18,18 +18,44 @@ local HttpService = game:GetService("HttpService")
 local BadgeService = game:GetService("BadgeService")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
-local VIM = game:GetService("VirtualInputManager")
 
 local lp = Players.LocalPlayer
 local placeId = game.PlaceId
 
+local function runSuctionCode()
+    task.spawn(function()
+        local char = lp.Character or lp.CharacterAdded:Wait()
+        local hrp = char:WaitForChild("HumanoidRootPart")
+        local targets = {"PlungerMain", "plunger glove", "ToiletPlunger", "Unity"}
+        for _, name in ipairs(targets) do
+            local item = workspace:FindFirstChild(name, true)
+            if item then
+                hrp.CFrame = item:GetPivot()
+                task.wait(0.4)
+                local cd = item:FindFirstChildWhichIsA("ClickDetector", true)
+                if cd then fireclickdetector(cd) end
+                local part = item:IsA("Model") and (item.PrimaryPart or item:FindFirstChildWhichIsA("BasePart")) or item
+                if part and firetouchinterest then
+                    firetouchinterest(hrp, part, 0)
+                    firetouchinterest(hrp, part, 1)
+                end
+                task.wait(0.4)
+            end
+        end
+    end)
+end
+
 local function runAutoGetCamera()
     task.spawn(function()
+        local Players      = game:GetService("Players")
+        local RS           = game:GetService("ReplicatedStorage")
+        local VIM          = game:GetService("VirtualInputManager")
+
         local player       = Players.LocalPlayer
         local char         = player.Character or player.CharacterAdded:Wait()
         local hrp          = char:WaitForChild("HumanoidRootPart")
         local humanoid     = char:WaitForChild("Humanoid")
-        local camRemotes   = ReplicatedStorage.Assets.Obtainments.Camera.Remotes
+        local camRemotes   = RS.Assets.Obtainments.Camera.Remotes
         local isPhotoValid = camRemotes.IsPhotoValid
 
         local function tp(pos)
@@ -158,29 +184,6 @@ local function runAutoGetCamera()
 
             photographPart(matchedPart, lookVec)
             task.wait(0.5)
-        end
-    end)
-end
-
-local function runSuctionCode()
-    task.spawn(function()
-        local char = lp.Character or lp.CharacterAdded:Wait()
-        local hrp = char:WaitForChild("HumanoidRootPart")
-        local targets = {"PlungerMain", "plunger glove", "ToiletPlunger", "Unity"}
-        for _, name in ipairs(targets) do
-            local item = workspace:FindFirstChild(name, true)
-            if item then
-                hrp.CFrame = item:GetPivot()
-                task.wait(0.4)
-                local cd = item:FindFirstChildWhichIsA("ClickDetector", true)
-                if cd then fireclickdetector(cd) end
-                local part = item:IsA("Model") and (item.PrimaryPart or item:FindFirstChildWhichIsA("BasePart")) or item
-                if part and firetouchinterest then
-                    firetouchinterest(hrp, part, 0)
-                    firetouchinterest(hrp, part, 1)
-                end
-                task.wait(0.4)
-            end
         end
     end)
 end
@@ -1731,7 +1734,7 @@ elseif placeId == 77283826005207 then
                 local lobby = map:WaitForChild("Lobby", 10)
                 if not lobby then return end
                 for i = 1, 3 do
-                    local portal = lobby:FindFirstChild("Portal" .. i)
+                    local portal = lobby:FindFirstChild("Portal" + i)
                     local part = portal and portal:FindFirstChild("Part")
                     if part then
                         touchPart(part)
@@ -1907,13 +1910,6 @@ else
     local Tab1 = Window:CreateTab("Slap Battles Badges", 4483345998)
 
     Tab1:CreateButton({
-        Name = "Auto-Get camera (Nothing is required)",
-        Callback = function()
-            runAutoGetCamera()
-        end
-    })
-
-    Tab1:CreateButton({
         Name = "Auto-Get Alchemist",
         Callback = function()
             runAutoGetAlchemist()
@@ -1924,6 +1920,13 @@ else
         Name = "Auto-Get sand",
         Callback = function()
             runAutoGetSand()
+        end
+    })
+
+    Tab1:CreateButton({
+        Name = "Auto-Get camera (Nothing is required)",
+        Callback = function()
+            runAutoGetCamera()
         end
     })
 
@@ -2183,6 +2186,95 @@ end
             if character and character:FindFirstChild("HumanoidRootPart") then
                 character.HumanoidRootPart.CFrame = CFrame.new(17942.72, -130.16, -3558.06, 0.998, -0.000, -0.057, 0.000, 1.000, -0.000, 0.057, 0.000, 0.998)
             end
+        end
+    })
+
+    Tab1:CreateButton({
+        Name = "Auto Slender",
+        Callback = function()
+            task.spawn(function()
+                if placeId == 6403373529 or placeId == 9015014224 then
+                    local function gethrp()
+                        local c = lp.Character or lp.CharacterAdded:Wait()
+                        return c:WaitForChild("HumanoidRootPart", 5)
+                    end
+                    local function equipGlove(glove)
+                        local stats = lp:FindFirstChild("leaderstats")
+                        if stats and stats:FindFirstChild("Glove") and stats.Glove.Value ~= glove then
+                            if lp.Character and not lp.Character:FindFirstChild("entered") then
+                                local g = Workspace.Lobby:FindFirstChild(glove)
+                                if g and g:FindFirstChild("ClickDetector") then
+                                    fireclickdetector(g.ClickDetector)
+                                    task.wait(0.5)
+                                end
+                            end
+                        end
+                    end
+                    local function reset()
+                        if lp.Character and lp.Character:FindFirstChild("Humanoid") then
+                            lp.Character.Humanoid.Health = 0
+                        end
+                        lp.CharacterAdded:Wait()
+                        task.wait(1)
+                    end
+                    equipGlove("Balloony")
+                    local root = gethrp()
+                    if root then root.CFrame = CFrame.new(-1210.02, 331.92, 3.47, 0.018, 0, 1, 0, 1, 0, -1, 0, 0.018) end
+                    local tape = Workspace:WaitForChild("TapeRecorder", 10)
+                    if tape and tape:FindFirstChild("Front") then
+                        root = gethrp()
+                        if root then root.CFrame = tape.Front.CFrame * CFrame.new(0, 0, -1) end
+                        task.wait(0.2)
+                        if tape.Front:FindFirstChild("ProximityPrompt") then fireproximityprompt(tape.Front.ProximityPrompt) end
+                        task.wait(0.15)
+                        local code = ""
+                        local rec = true
+                        local sfx = tape.Front:FindFirstChild("DigitsSFX")
+                        while rec do
+                            task.wait()
+                            if sfx then
+                                for i = 0, 9 do
+                                    local d = tostring(i)
+                                    local snd = sfx:FindFirstChild(d)
+                                    if snd and snd.Playing then
+                                        code = code .. d
+                                        task.wait(1)
+                                        break
+                                    end
+                                end
+                            end
+                            if tape.Front.ProximityPrompt.Enabled then rec = false end
+                        end
+                        reset()
+                        equipGlove("Pocket")
+                        root = gethrp()
+                        if root then
+                            root.CFrame = CFrame.new(-1210.02, 331.92, 3.47, 0.018, 0, 1, 0, 1, 0, -1, 0, 0.018)
+                            task.wait(0.5)
+                            root.CFrame = CFrame.new(123.28, 255.30, 1.05, 0.998, 0, -0.055, 0, 1, 0, 0.055, 0, 0.998)
+                            task.wait(0.5)
+                            root.CFrame = CFrame.new(17944.88, -130.16, -3492.70, -0.998, 0, -0.070, 0, 1, 0, 0.070, 0, -0.998)
+                            task.wait(0.5)
+                        end
+                        local rem = ReplicatedStorage:FindFirstChild("GeneralAbility")
+                        if rem and root then rem:FireServer(root.CFrame) end
+                        local pocket = nil
+                        local t = tick() + 10
+                        repeat
+                            task.wait(0.2)
+                            for _, v in ipairs(Workspace:GetChildren()) do
+                                if v:IsA("Model") and string.find(v.Name, "'s Pocket") then
+                                    if v:FindFirstChildWhichIsA("ProximityPrompt", true) then pocket = v break end
+                                end
+                            end
+                        until pocket or tick() > t
+                        if pocket then
+                            local prompt = pocket:FindFirstChildWhichIsA("ProximityPrompt", true)
+                            if prompt then fireproximityprompt(prompt) end
+                        end
+                    end
+                end
+            end)
         end
     })
 end
