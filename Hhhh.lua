@@ -45,9 +45,123 @@ local function runSuctionCode()
     end)
 end
 
+-- Код для Auto-Get sand
+local function runAutoGetSand()
+    local LocalPlayer = Players.LocalPlayer
+    local TeleportService = game:GetService("TeleportService")
+    local Workspace = game:GetService("Workspace")
+    local Camera = Workspace.CurrentCamera
+    local queue = queueonteleport or queue_on_teleport
+
+    local targetPlace = 122902713960550
+
+    if game.PlaceId ~= targetPlace then
+        TeleportService:Teleport(targetPlace)
+        if queue then
+            queue([[
+                if not game:IsLoaded() then
+                   game.Loaded:Wait()
+                end
+                if game.PlaceId ~= 122902713960550 then return end
+                local Players = game:GetService("Players")
+                local LocalPlayer = Players.LocalPlayer
+                local Workspace = game:GetService("Workspace")
+                local Camera = Workspace.CurrentCamera
+                
+                repeat task.wait() until Workspace:FindFirstChild("Island") and Workspace.Island:FindFirstChild("John Surfboard")
+                
+                LocalPlayer.Character:PivotTo(Workspace.Island["John Surfboard"].Head:GetPivot())
+                task.wait(.3)
+                fireproximityprompt(Workspace.Island["John Surfboard"].Head:FindFirstChildWhichIsA("ProximityPrompt"))
+                wait(.1)
+                for i = 1,20 do
+                    local args = {
+                        [1] = 0
+                    }
+                    game:GetService("ReplicatedStorage").Modules.Common.Dialogue.Remotes.ResondToDialogue:FireServer(unpack(args))
+                    wait()
+                end
+                
+                task.wait(1)
+                Camera.CameraType = Enum.CameraType.Custom
+                Camera.CameraSubject = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+                
+                while wait() do
+                    for i,v in pairs(workspace.ObjectSpawner_Objects:GetChildren()) do
+                        v:Destroy()
+                    end
+                end
+            ]])
+        end
+        return
+    end
+
+    repeat task.wait() until Workspace:FindFirstChild("Island") and Workspace.Island:FindFirstChild("John Surfboard")
+
+    LocalPlayer.Character:PivotTo(Workspace.Island["John Surfboard"].Head:GetPivot())
+    task.wait(.3)
+    fireproximityprompt(Workspace.Island["John Surfboard"].Head:FindFirstChildWhichIsA("ProximityPrompt"))
+    wait(.1)
+    for i = 1,20 do
+        local args = {
+            [1] = 0
+        }
+        
+        game:GetService("ReplicatedStorage").Modules.Common.Dialogue.Remotes.ResondToDialogue:FireServer(unpack(args))
+        wait()
+    end
+
+    task.wait(1)
+    Camera.CameraType = Enum.CameraType.Custom
+    Camera.CameraSubject = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+
+    while wait() do
+        for i,v in pairs(workspace.ObjectSpawner_Objects:GetChildren()) do
+            v:Destroy()
+        end
+    end
+end
+
 local Window
 
-if placeId == 11828384869 then
+-- Отдельное мини-GUI для конкретного плейса 122902713960550
+if placeId == 122902713960550 then
+    local ScreenGui = Instance.new("ScreenGui")
+    local MainFrame = Instance.new("Frame")
+    local UICorner = Instance.new("UICorner")
+    local Button = Instance.new("TextButton")
+    local UICorner_2 = Instance.new("UICorner")
+
+    ScreenGui.Name = "SandGui"
+    ScreenGui.Parent = game:GetService("CoreGui")
+    ScreenGui.ResetOnSpawn = false
+
+    MainFrame.Name = "MainFrame"
+    MainFrame.Parent = ScreenGui
+    MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    MainFrame.Position = UDim2.new(0.05, 0, 0.1, 0)
+    MainFrame.Size = UDim2.new(0, 220, 0, 90)
+
+    UICorner.Parent = MainFrame
+
+    Button.Name = "AutoGetSandButton"
+    Button.Parent = MainFrame
+    Button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    Button.Position = UDim2.new(0.08, 0, 0.2, 0)
+    Button.Size = UDim2.new(0, 185, 0, 50)
+    Button.Font = Enum.Font.SourceSansBold
+    Button.Text = "Auto-Get sand"
+    Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Button.TextSize = 18
+
+    UICorner_2.Parent = Button
+
+    Button.MouseButton1Click:Connect(function()
+        runAutoGetSand()
+    end)
+
+-- Остальная часть хаба для остальных плейсов
+elseif placeId == 11828384869 then
     Window = Rayfield:CreateWindow({
         Name = "Femboy Hub - Counter & Elude",
         LoadingTitle = "Femboy Hub",
@@ -1299,6 +1413,7 @@ elseif placeId == 77283826005207 then
                 local lobby = map:WaitForChild("Lobby", 10)
                 if not lobby then return end
                 for i = 1, 3 do
+                    local portal = lobby:FindFirstChild("Portal" + tostring(i)) -- исправлено на конкатенацию ниже
                     local portal = lobby:FindFirstChild("Portal" .. i)
                     local part = portal and portal:FindFirstChild("Part")
                     if part then
@@ -1473,6 +1588,14 @@ else
     end
 
     local Tab1 = Window:CreateTab("Slap Battles Badges", 4483345998)
+
+    -- Добавлена кнопка Auto-Get sand в основной хаб
+    Tab1:CreateButton({
+        Name = "Auto-Get sand",
+        Callback = function()
+            runAutoGetSand()
+        end
+    })
 
     Tab1:CreateButton({ Name = "Auto-Get G-X", Callback = function() TeleportService:Teleport(77283826005207) end })
     Tab1:CreateButton({ Name = "Auto-Get Counter + Elude", Callback = function() TeleportService:Teleport(11828384869, lp) end })
